@@ -1,0 +1,19 @@
+apiVersion: stork.libopenstorage.org/v1alpha1
+kind: SchedulePolicy
+metadata:
+  name: sp-demo
+policy:
+  interval:
+    intervalMinutes: 15
+    retain: 2
+  daily:
+    time: "04:28PM"
+    retain: 2
+#  weekly:
+#    day: "Thursday"
+#    time: "10:13PM"
+#    retain: 5
+#  monthly:
+#    date: 14
+#    time: "8:05PM"
+#    retain: 5

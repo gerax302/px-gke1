@@ -1,0 +1,13 @@
+apiVersion: stork.libopenstorage.org/v1alpha1
+kind: ApplicationRestore
+metadata:
+  name: ar
+  namespace: mysql-demo-nginx
+spec:
+  backupName: backup
+  backupLocation: mysql
+  namespaceMapping:
+    mysql: mysql
+  replacePolicy: Delete
+
+############# INCOMPLETE FILE #############

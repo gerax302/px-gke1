@@ -1,0 +1,15 @@
+apiVersion: stork.libopenstorage.org/v1alpha1
+kind: ApplicationBackup
+metadata:
+  name: ab-demo
+  namespace: default
+spec:
+  backupLocation: bl-demo
+  namespaces:
+  #- mysql-demo-nginx
+  - default
+  - kube-system
+  reclaimPolicy: Delete
+#  selectors:
+#  preExecRule:
+#  postExecRule:
