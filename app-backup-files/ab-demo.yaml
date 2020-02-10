@@ -6,9 +6,11 @@ metadata:
 spec:
   backupLocation: bl-demo
   namespaces:
-  #- mysql-demo-nginx
-  - default
-  - kube-system
+  #- mysql-demo
+  #- mongodb
+  #- kube-system
+  - default #default & kube-system are not recommended here, use named namespaces (mongodb, monitoring, gerans)
+
   reclaimPolicy: Delete
 #  selectors:
 #  preExecRule:

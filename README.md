@@ -5,7 +5,11 @@ This repo contains examples for:
 - SC and deployment
 - Application Backup Strategy
 
-
+In GCP you need to have an IAM & Service Account for portworx with the following role permissions:
+- Editor
+- Storage Object Admin
+- Storage Object Creator
+- Storage Object Viewer
 
 ## ETCD Notes 
 
@@ -34,3 +38,58 @@ Choose to label just one, for testing purposes.
 7. Application Restore
 
 Recommended to have credentials and AB (Application Backup) in **kube-system** namespace
+
+## Portworx
+
+```bash
+PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}')
+kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl status -—color 
+
+kubectl exec -it $PX_POD -n kube-system bash 
+alias p=/opt/pwx/bin/pxctl
+
+kubectl get pods -l name=portworx -n kube-system -o wide
+
+
+PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}')
+kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl volume list
+```
+
+## Stork
+
+#### Get Stork
+
+The following instructions are to you can get the binarie from the pod to your workstation.
+```bash
+LINUX
+STORK_POD=$(kubectl get pods -n kube-system -l name=stork -o jsonpath='{.items[0].metadata.name}') &&
+kubectl cp -n kube-system $STORK_POD:/storkctl/linux/storkctl ./storkctl
+sudo mv storkctl /usr/local/bin &&
+sudo chmod +x /usr/local/bin/storkctl
+
+
+OSX
+STORK_POD=$(kubectl get pods -n kube-system -l name=stork -o jsonpath='{.items[0].metadata.name}') &&
+kubectl cp -n kube-system $STORK_POD:/storkctl/darwin/storkctl ./storkctl
+sudo mv storkctl /usr/local/bin &&
+sudo chmod +x /usr/local/bin/storkctl
+```
+
+
+
+#### Storkctl (stork cli)
+```bash
+storkctl version
+storkctl get schedulepolicy
+storkctl get volumesnapshotschedules
+storkctl get volumesnapshots
+
+storkctl get backuplocation -n kube-system
+kubectl describe backuplocation.stork.libopenstorage.org -n kube-system
+
+storkctl get applicationbackups -n kube-system
+kubectl describe applicationbackup.stork.libopenstorage.org -n kube-system
+
+storkctl get applicationbackupschedule -n kube-system
+kubectl describe applicationbackupschedule.stork.libopenstorage.org -n kube-system
+```

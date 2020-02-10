@@ -10,5 +10,6 @@ spec:
       backupLocation: bl-demo
       namespaces:
       #- mysql
-      - default
+      #- mongodb
+      - default # not recommended to use default, use a named namespace instead. To add more, edit the object on the fly
       reclaimPolicy: Delete
