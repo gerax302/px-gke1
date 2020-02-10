@@ -23,3 +23,14 @@ After create GKE Test Env, you will need to label your nodes.
 Choose to label just one, for testing purposes.
 
 
+## Application Backup Strategy Notes
+
+1. Storage Class
+2. Scheduled Policy
+3. Credentials / Secret
+4. Backup Location -->(3)
+5. Application Backup --> (4)
+6. Application Backup Schedule -->(2)(4)
+7. Application Restore
+
+Recommended to have credentials and AB (Application Backup) in **kube-system** namespace
