@@ -1,0 +1,13 @@
+apiVersion: stork.libopenstorage.org/v1alpha1
+kind: ApplicationBackupSchedule
+metadata:
+  name: abs-pos
+  namespace: kube-system
+spec:
+  schedulePolicyName: sp-demo
+  template:
+    spec:
+      backupLocation: bl-demo
+      namespaces:
+      - pos 
+      reclaimPolicy: Delete

@@ -93,3 +93,9 @@ kubectl describe applicationbackup.stork.libopenstorage.org -n kube-system
 storkctl get applicationbackupschedule -n kube-system
 kubectl describe applicationbackupschedule.stork.libopenstorage.org -n kube-system
 ```
+
+### Wipe PX Resources
+`curl -fsL https://install.portworx.com/px-wipe | bash` 
+
+Here you can find more information:
+https://docs.portworx.com/portworx-install-with-kubernetes/operate-and-maintain-on-kubernetes/uninstall/uninstall/#delete-wipe-px-cluster-configuration 
