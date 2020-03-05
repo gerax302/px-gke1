@@ -19,13 +19,17 @@ Only the nodes with the label will participate in the kvdb cluster.
 This allows you to use nodes with dedicated hardware for the key-value store.
 Portworx will create and manage an internal key-value store (kvdb) cluster.
 
-For example: kubectl label nodes node1 node2 node3 px/metadata-node=true
+For example: `kubectl label nodes node1 node2 node3 px/metadata-node=true` 
+
 If you have 3 nodes, will create an etcd instance by node.
 
-**Observations**
+Extra tag: ` kc label nodes --all px/enabled=true --overwrite`
+
+**Note:** 
 After create GKE Test Env, you will need to label your nodes.
 Choose to label just one, for testing purposes.
 
+Code: `nodePxMetadata=$(kc get node | awk 'NR==2{print $1}'); kubectl label node $nodePxMetadata px/metadata-node=true`
 
 ## Application Backup Strategy Notes
 
@@ -99,3 +103,6 @@ kubectl describe applicationbackupschedule.stork.libopenstorage.org -n kube-syst
 
 Here you can find more information:
 https://docs.portworx.com/portworx-install-with-kubernetes/operate-and-maintain-on-kubernetes/uninstall/uninstall/#delete-wipe-px-cluster-configuration 
+
+
+For more PX deploy examples, [click here. ](https://github.com/portworx/k8s-px-examples) 
