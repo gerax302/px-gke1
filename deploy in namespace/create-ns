@@ -1,0 +1,2 @@
+kubectl create ns jen
+kubectl create ns pos

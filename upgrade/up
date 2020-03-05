@@ -1,0 +1,2 @@
+PXVER='2.3'
+curl -fsL https://install.portworx.com/${PXVER}/upgrade | bash -s
