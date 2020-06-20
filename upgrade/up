@@ -1,2 +1,7 @@
 PXVER='2.3'
 curl -fsL https://install.portworx.com/${PXVER}/upgrade | bash -s
+
+#edit portworx daemonset
+#change image filed
+#change: oci-monitor:tag
+#Example: portworx/oci-monitor:2.3.6

@@ -1,4 +1,4 @@
-# SOURCE: https://install.portworx.com/?mc=false&kbver=1.14.10-gke.24&b=true&s=%22type%3Dpd-standard%2Csize%3D35%22&c=gdev-21-cca941c5-d0b5-45b5-b965-28eb95e92a5c&gke=true&stork=true&lh=true&st=k8s
+# SOURCE: https://install.portworx.com/?mc=false&kbver=1.14.10-gke.34&b=true&mz=2&s=%22type%3Dpd-standard%2Csize%3D25%22&c=gcluster2-5-cca941c5-d0b5-45b5-b965-28eb95e92a5c&gke=true&stork=true&st=k8s
 ---
 kind: Service
 apiVersion: v1
@@ -50,6 +50,164 @@ spec:
     shortNames:
     - vps
     - vp
+  validation:
+    openAPIV3Schema:
+      type: object
+      required:
+      - spec
+      properties:
+        spec:
+          type: object
+          description: The desired spec of the volume placement strategy
+          properties:
+            replicaAffinity:
+              type: array
+              description: Allows you to specify a rule which creates an affinity for replicas within a volume
+              items:
+                type: object
+                properties:
+                  enforcement:
+                    type: string
+                    enum:
+                    - required
+                    - preferred
+                    description: Specifies if the given rule is required (hard) or preferred (soft)
+                  topologyKey:
+                    type: string
+                    minLength: 1
+                    description: Key for the node label that the system uses to denote a topology domain. The key can be for any node label that is present on the Kubernetes node.
+                  matchExpressions:
+                    description: Expression to use for the replica affinity rule
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          minLength: 1
+                        operator:
+                          type: string
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          - Lt
+                          - Gt
+                          description: The logical operator to use for comparing the key and values in the match expression
+                        values:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                      - key
+                      - operator
+            replicaAntiAffinity:
+              type: array
+              description: Allows you to specify a rule that creates an anti-affinity for replicas within a volume
+              items:
+                type: object
+                properties:
+                  enforcement:
+                    type: string
+                    enum:
+                    - required
+                    - preferred
+                    description: Specifies if the given rule is required (hard) or preferred (soft)
+                  topologyKey:
+                    type: string
+                    minLength: 1
+                    description: Key for the node label that the system uses to denote a topology domain. The key can be for any node label that is present on the Kubernetes node.
+                required:
+                - topologyKey
+            volumeAffinity:
+              type: array
+              description: Allows you to colocate volumes by specifying rules that place replicas of a volume together with those of another volume for which the specified labels match
+              items:
+                type: object
+                properties:
+                  enforcement:
+                    type: string
+                    enum:
+                    - required
+                    - preferred
+                    description: Specifies if the given rule is required (hard) or preferred (soft)
+                  topologyKey:
+                    type: string
+                    minLength: 1
+                    description: Key for the node label that the system uses to denote a topology domain. The key can be for any node label that is present on the Kubernetes node.
+                  matchExpressions:
+                    description: Expression to use for the volume affinity rule
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          minLength: 1
+                        operator:
+                          type: string
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          - Lt
+                          - Gt
+                          description: The logical operator to use for comparing the key and values in the match expression
+                        values:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                      - key
+                      - operator
+                required:
+                - matchExpressions
+            volumeAntiAffinity:
+              type: array
+              description: Allows you to specify dissociation rules between 2 or more volumes that match the given labels
+              items:
+                type: object
+                properties:
+                  enforcement:
+                    type: string
+                    enum:
+                    - required
+                    - preferred
+                    description: Specifies if the given rule is required (hard) or preferred (soft)
+                  topologyKey:
+                    type: string
+                    minLength: 1
+                    description: Key for the node label that the system uses to denote a topology domain. The key can be for any node label that is present on the Kubernetes node.
+                  matchExpressions:
+                    description: Expression to use for the volume anti affinity rule
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          minLength: 1
+                        operator:
+                          type: string
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          - Lt
+                          - Gt
+                          description: The logical operator to use for comparing the key and values in the match expression
+                        values:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                      - key
+                      - operator
+                required:
+                - matchExpressions
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -74,6 +232,9 @@ rules:
 - apiGroups: [""]
   resources: ["persistentvolumeclaims", "persistentvolumes"]
   verbs: ["get", "list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "list", "update", "create"]
@@ -84,6 +245,16 @@ rules:
 - apiGroups: ["portworx.io"]
   resources: ["volumeplacementstrategies"]
   verbs: ["get", "list"]
+- apiGroups: ["stork.libopenstorage.org"]
+  resources: ["backuplocations"]
+  verbs: ["get", "list"]
+- apiGroups: ["core.libopenstorage.org"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
+
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -127,6 +298,7 @@ roleRef:
   name: px-role
   apiGroup: rbac.authorization.k8s.io
 ---
+
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -135,7 +307,7 @@ metadata:
   labels:
     name: portworx
   annotations:
-    portworx.com/install-source: "https://install.portworx.com/?mc=false&kbver=1.14.10-gke.24&b=true&s=%22type%3Dpd-standard%2Csize%3D35%22&c=gdev-21-cca941c5-d0b5-45b5-b965-28eb95e92a5c&gke=true&stork=true&lh=true&st=k8s"
+    portworx.com/install-source: "https://install.portworx.com/?mc=false&kbver=1.14.10-gke.34&b=true&mz=2&s=%22type%3Dpd-standard%2Csize%3D25%22&c=gcluster2-5-cca941c5-d0b5-45b5-b965-28eb95e92a5c&gke=true&stork=true&st=k8s"
 spec:
   selector:
     matchLabels:
@@ -165,10 +337,10 @@ spec:
       hostPID: false
       containers:
         - name: portworx
-          image: portworx/oci-monitor:2.1.7
+          image: portworx/oci-monitor:2.5.1
           imagePullPolicy: Always
           args:
-            ["-c", "gdev-21-cca941c5-d0b5-45b5-b965-28eb95e92a5c", "-s", "type=pd-standard,size=35", "-secret_type", "k8s", "-b", 
+            ["-c", "gcluster2-5-cca941c5-d0b5-45b5-b965-28eb95e92a5c", "-s", "type=pd-standard,size=25", "-secret_type", "k8s", "-b", "-max_storage_nodes_per_zone", "2", 
              "-x", "kubernetes"]
           env:
             - name: "AUTO_NODE_RECOVERY_TIMEOUT_IN_SECS"
@@ -205,6 +377,8 @@ spec:
               mountPath: /etc/crictl.yaml
             - name: etcpwx
               mountPath: /etc/pwx
+            - name: dev
+              mountPath: /dev
             - name: optpwx
               mountPath: /opt/pwx
             - name: procmount
@@ -241,6 +415,9 @@ spec:
         - name: etcpwx
           hostPath:
             path: /etc/pwx
+        - name: dev
+          hostPath:
+            path: /dev
         - name: optpwx
           hostPath:
             path: /opt/pwx
@@ -331,31 +508,6 @@ spec:
               port: 9001
       restartPolicy: Always
       serviceAccountName: px-account
-
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: stork-config
-  namespace: kube-system
-data:
-  policy.cfg: |-
-    {
-      "kind": "Policy",
-      "apiVersion": "v1",
-      "extenders": [
-        {
-          "urlPrefix": "http://stork-service.kube-system:8099",
-          "apiVersion": "v1beta1",
-          "filterVerb": "filter",
-          "prioritizeVerb": "prioritize",
-          "weight": 5,
-          "enableHttps": false,
-          "nodeCacheCapable": false
-        }
-      ]
-    }
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -385,19 +537,6 @@ roleRef:
   name: stork-role
   apiGroup: rbac.authorization.k8s.io
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: stork-service
-  namespace: kube-system
-spec:
-  selector:
-    name: stork
-  ports:
-    - protocol: TCP
-      port: 8099
-      targetPort: 8099
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -425,23 +564,6 @@ spec:
         name: stork
         tier: control-plane
     spec:
-      containers:
-      - command:
-        - /stork
-        - --driver=pxd
-        - --verbose
-        - --leader-elect=true
-        - --health-monitor-interval=120
-        imagePullPolicy: Always
-        image: openstorage/stork:2.2.5
-        env:
-        - name: "PX_SERVICE_NAME"
-          value: "portworx-api"
-        resources:
-          requests:
-            cpu: '0.1'
-        name: stork
-      hostPID: false
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -452,6 +574,23 @@ spec:
                     values:
                     - stork
               topologyKey: "kubernetes.io/hostname"
+      hostPID: false
+      containers:
+      - command:
+        - /stork
+        - --driver=pxd
+        - --verbose
+        - --leader-elect=true
+        - --health-monitor-interval=120
+        image: openstorage/stork:2.4.1
+        imagePullPolicy: Always
+        env:
+        - name: "PX_SERVICE_NAME"
+          value: "portworx-api"
+        resources:
+          requests:
+            cpu: '0.1'
+        name: stork
       serviceAccountName: stork-account
 ---
 kind: StorageClass
@@ -459,6 +598,48 @@ apiVersion: storage.k8s.io/v1
 metadata:
   name: stork-snapshot-sc
 provisioner: stork-snapshot
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: stork-service
+  namespace: kube-system
+spec:
+  selector:
+    name: stork
+  ports:
+    - name: extender
+      protocol: TCP
+      port: 8099
+      targetPort: 8099
+    - name: webhook
+      protocol: TCP
+      port: 443
+      targetPort: 443
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stork-config
+  namespace: kube-system
+data:
+  policy.cfg: |-
+    {
+      "kind": "Policy",
+      "apiVersion": "v1",
+      "extenders": [
+        {
+          "urlPrefix": "http://stork-service.kube-system:8099",
+          "apiVersion": "v1beta1",
+          "filterVerb": "filter",
+          "prioritizeVerb": "prioritize",
+          "weight": 5,
+          "enableHttps": false,
+          "nodeCacheCapable": false,
+          "httpTimeout": 300000000000
+        }
+      ]
+    }
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -476,8 +657,8 @@ rules:
     verbs: ["get", "create", "update"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get"]
-  - apiGroups: [""]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["", "events.k8s.io"]
     resources: ["events"]
     verbs: ["create", "patch", "update"]
   - apiGroups: [""]
@@ -514,6 +695,9 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses", "csinodes"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create", "update", "get", "list", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -550,29 +734,6 @@ spec:
         name: stork-scheduler
       name: stork-scheduler
     spec:
-      containers:
-      - command:
-        - /usr/local/bin/kube-scheduler
-        - --address=0.0.0.0
-        - --leader-elect=true
-        - --scheduler-name=stork
-        - --policy-configmap=stork-config
-        - --policy-configmap-namespace=kube-system
-        - --lock-object-name=stork-scheduler
-        image: gcr.io/google_containers/kube-scheduler-amd64:v1.14.10
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 10251
-          initialDelaySeconds: 15
-        name: stork-scheduler
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 10251
-        resources:
-          requests:
-            cpu: '0.1'
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -584,6 +745,30 @@ spec:
                     - stork-scheduler
               topologyKey: "kubernetes.io/hostname"
       hostPID: false
+      containers:
+        - command:
+          - /usr/local/bin/kube-scheduler
+          - --address=0.0.0.0
+          - --leader-elect=true
+          - --scheduler-name=stork
+          - --policy-configmap=stork-config
+          - --policy-configmap-namespace=kube-system
+          - --lock-object-name=stork-scheduler
+          image: gcr.io/google_containers/kube-scheduler-amd64:v1.14.10
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 10251
+            initialDelaySeconds: 15
+          name: stork-scheduler
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 10251
+          resources:
+            requests:
+              cpu: '0.1'
       serviceAccountName: stork-scheduler-account
 ---
 apiVersion: v1
@@ -623,13 +808,16 @@ rules:
   verbs: ["get", "list"]
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["watch", "create", "patch", "update"]
 - apiGroups: [""]
   resources: ["serviceaccounts"]
   verbs: ["get", "create"]
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  verbs: ["create"]
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "create", "update"]
@@ -674,6 +862,17 @@ spec:
         name: portworx-pvc-controller
         tier: control-plane
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "name"
+                    operator: In
+                    values:
+                    - portworx-pvc-controller
+              topologyKey: "kubernetes.io/hostname"
+      hostNetwork: true
       containers:
       - command:
         - kube-controller-manager
@@ -683,6 +882,7 @@ spec:
         - --use-service-account-credentials=true
         - --leader-elect-resource-lock=configmaps
         image: gcr.io/google_containers/kube-controller-manager-amd64:v1.14.10
+        imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 8
           httpGet:
@@ -696,7 +896,76 @@ spec:
         resources:
           requests:
             cpu: 200m
-      hostNetwork: true
+      serviceAccountName: portworx-pvc-controller-account
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autopilot-config
+  namespace: kube-system
+data:
+  config.yaml: |-
+    providers:
+       - name: default
+         type: prometheus
+         params: url=http://prometheus:9090
+    min_poll_interval: 2
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: autopilot-account
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+   name: autopilot-role
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: autopilot-role-binding
+subjects:
+- kind: ServiceAccount
+  name: autopilot-account
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: autopilot-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    tier: control-plane
+  name: autopilot
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: autopilot
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+      labels:
+        name: autopilot
+        tier: control-plane
+    spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -705,139 +974,48 @@ spec:
                   - key: "name"
                     operator: In
                     values:
-                    - portworx-pvc-controller
+                    - autopilot
               topologyKey: "kubernetes.io/hostname"
-      serviceAccountName: portworx-pvc-controller-account
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: px-lh-account
-  namespace: kube-system
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: px-lh-role
-  namespace: kube-system
-rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["list", "get"]
-  - apiGroups:
-        - extensions
-        - apps
-    resources:
-        - deployments
-    verbs: ["get", "list"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "create", "update"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "create", "update"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["create", "get", "list", "watch"]
-  - apiGroups: ["stork.libopenstorage.org"]
-    resources: ["clusterpairs","migrations","groupvolumesnapshots"]
-    verbs: ["get", "list", "create", "update", "delete"]
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - alertmanagers
-      - prometheuses
-      - prometheuses/finalizers
-      - servicemonitors
-    verbs: ["*"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: px-lh-role-binding
-  namespace: kube-system
-subjects:
-  - kind: ServiceAccount
-    name: px-lh-account
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: px-lh-role
-  apiGroup: rbac.authorization.k8s.io
+      hostPID: false
+      containers:
+      - command:
+        - /autopilot
+        - -f
+        - ./etc/config/config.yaml
+        - -log-level
+        - debug
+        imagePullPolicy: Always
+        image: portworx/autopilot:1.2.1
+        resources:
+          requests:
+            cpu: '0.1'
+        securityContext:
+          privileged: false
+        name: autopilot
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+      serviceAccountName: autopilot-account
+      volumes:
+        - name: config-volume
+          configMap:
+            name: autopilot-config
+            items:
+            - key: config.yaml
+              path: config.yaml
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: px-lighthouse
+  name: autopilot
   namespace: kube-system
   labels:
-    tier: px-web-console
+    name: autopilot-service
 spec:
-  type: ClusterIP
   ports:
-    - name: http
-      port: 80
-    - name: https
-      port: 443
+    - name: autopilot
+      protocol: TCP
+      port: 9628
   selector:
-    tier: px-web-console
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: px-lighthouse
-  namespace: kube-system
-  labels:
-    tier: px-web-console
-spec:
-  strategy:
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-    type: RollingUpdate
-  selector:
-    matchLabels:
-      tier: px-web-console
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        tier: px-web-console
-    spec:
-      initContainers:
-      - name: config-init
-        image: portworx/lh-config-sync:0.4
-        imagePullPolicy: Always
-        args:
-        - "init"
-        volumeMounts:
-        - name: config
-          mountPath: /config/lh
-      containers:
-      - name: px-lighthouse
-        image: portworx/px-lighthouse:2.0.4
-        imagePullPolicy: Always
-        args: [ "-kubernetes", "true" ]
-        ports:
-        - containerPort: 80
-        - containerPort: 443
-        volumeMounts:
-        - name: config
-          mountPath: /config/lh
-      - name: config-sync
-        image: portworx/lh-config-sync:0.4
-        imagePullPolicy: Always
-        args:
-        - "sync"
-        volumeMounts:
-        - name: config
-          mountPath: /config/lh
-      - name: stork-connector
-        image: portworx/lh-stork-connector:0.2
-        imagePullPolicy: Always
-      serviceAccountName: px-lh-account
-      volumes:
-      - name: config
-        emptyDir: {}
+    name: autopilot
+    tier: control-plane
